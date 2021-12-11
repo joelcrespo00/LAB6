@@ -1,16 +1,76 @@
+import datetime as dt
+import random
+from neo4j import GraphDatabase
 
-
+#Credencials DB
+uri = "bolt://localhost:7687"
+userName = "neo4j"
+password = "test"
 
 # DATA
-flag = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+flag = [1, 0]
 nation = ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Anguilla", "Antigua &amp; Barbuda", "Argentina",
-          "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados",
-          "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia"]
-region = ["Alaska",
-          "Alabama",
-          "Arkansas",
-          "Arizona",
-          "California"]
+          "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados"]
+address = ["Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia"]
+region = ["Alaska", "Alabama", "Arkansas", "Arizona", "California"]
+mfgr = ["A", "B", "C"]
+tipus = ["FD", "D"]
+dates = ["2020-01-01", "1900-10-10", "2024-05-01", "2021-01-01"]
+segment = ["Seg1", "Seg2", "Seg3"]
+
+
+def drop_and_restart(session):
+    session.run("MATCH(n) DETACH DELETE n")
+
+    create_part(session)
+    create_supp(session)
+    create_partsupp(session)
+    create_order(session)
+    create_customer(session)
+    create_region(session)
+    create_segment(session)
+
+
+def create_part(session):
+    for i in range(10):
+        session.run("CREATE (n:Part {partkey: " + str(i) + ",mfgr: " + random.choice(mfgr) + ", "
+                                                                                             "size: " + str(
+            random.randint(0, 10)) + ",type: " + random.choice(tipus) + "})")
+
+
+def create_supp(session):
+    for i in range(10):
+        session.run("CREATE (n:Supplier {suppkey:" + str(i) + ", acctbal: " + str(random.randint(0, 10)) +
+                    ", name:" + random.choice(nation) + ", address: " + random.choice(address) +
+                    ",phone: '999999999999999', comment: 'Comentari', nationkey: " + str(i) + "})")
+
+
+def create_partsupp(session):
+    for i in range(10):
+        session.run("CREATE (n:Partsupp {partkey:" + str(i) +
+                    ", supplycost: " + str(random.randint(0, 10)) + ", suppkey: " + str(i) + "})")
+
+
+def create_order(session):
+    for i in range(10):
+        session.run("CREATE (n:Order {orderkey:" + str(i) +
+                    ", orderdate: " + random.choice(dates) +
+                    ", shippriority:" + str(random.randint(0, 10)) + ", custkey: " + str(i) + "})")
+
+
+def create_customer(session):
+    for i in range(10):
+        session.run("CREATE (n:Customer {custkey:" + str(i) + ", nationkey: " + str(i) + "})")
+
+
+def create_region(session):
+    for i in range(10):
+        session.run("CREATE (n:region {regionkey:" + str(i) + ", name: " + random.choice(region) + "})")
+
+
+def create_segment(session):
+    for i in range(10):
+        session.run("CREATE (n:Segment {mktsegment:" + random.choice(segment) + "})")
 
 
 def print_menu():
@@ -32,11 +92,11 @@ def valid_date(date):
 
 
 if __name__ == '__main__':
-    client = MongoClient("mongodb://sergi:sergi@127.0.0.1:27017/cbde-lab5")
-    db = client["cbde-lab5"]
 
-    create_and_generate_partsupp_collection(db)
-    create_order_collection(db)
+    driver = GraphDatabase.driver(uri, auth=(userName, password))
+    session = driver.session()
+
+    drop_and_restart(session)
 
     print_menu()
 
@@ -44,26 +104,22 @@ if __name__ == '__main__':
 
     while op != -1:
         if op == 0:
-            print("Collection Order")
-            for doc in db["order"].find():
-                print(doc)
-
-            print("Collection Partsupp")
-            for doc in db["partsupp"].find():
-                print(doc)
+            nodes = session.run("MATCH (n)-[r]->(m) RETURN n,r,m")
+            for node in nodes:
+                print(node)
 
         elif op == 1:
             # Entrar la data a comparar
             date = input("Introdueix data amb format següent: YYYY-mm-dd ")
             while not valid_date(date):
                 date = input("Format incorrecte. Introdueix data amb format següent: YYYY-mm-dd ")
-            q1(db["order"], dt.datetime.strptime(date, "%Y-%m-%d"))
+            #q1(db["order"], dt.datetime.strptime(date, "%Y-%m-%d"))
 
         elif op == 2:  # region, type, size
             size = input("Introdueix un valor numeric per l'atribut 'size': ")
             type = input("Introdueix un valor per l'atribut 'type' ")
             region = input("Introdueix un valor per l'atribut 'region' ")
-            q2(db["partsupp"], float(size), str(type), str(region))
+            #q2(db["partsupp"], float(size), str(type), str(region))
 
         elif op == 3:
             mkt_segment = input("Introdueix un valor per l'atribut 'mkt_segment'")
@@ -73,22 +129,18 @@ if __name__ == '__main__':
             date2 = input("Introdueix data amb format següent: YYYY-mm-dd ")
             while not valid_date(date2):
                 date2 = input("Format incorrecte. Introdueix data amb format següent: YYYY-mm-dd ")
-            q3(db["order"], str(mkt_segment), dt.datetime.strptime(date1, "%Y-%m-%d"),
-               dt.datetime.strptime(date2, "%Y-%m-%d"))
+            #q3(db["order"], str(mkt_segment), dt.datetime.strptime(date1, "%Y-%m-%d"),dt.datetime.strptime(date2, "%Y-%m-%d"))
 
         elif op == 4:
             region = input("Introdueix un valor per l'atribut 'region'")
             date = input("Introdueix data amb format següent: YYYY-mm-dd ")
             while not valid_date(date):
                 date = input("Format incorrecte. Introdueix data amb format següent: YYYY-mm-dd ")
-            q4(db["order"], str(region), dt.datetime.strptime(date, "%Y-%m-%d"))
+            #q4(db["order"], str(region), dt.datetime.strptime(date, "%Y-%m-%d"))
 
         print_menu()
         op = input("Desitja fer alguna accio mes?")
         op = int(op)
 
-
 ##### REQUIREMENTS
-#pymongo==3.12.1
-#names==0.3.0
-#faker
+# neo4j
