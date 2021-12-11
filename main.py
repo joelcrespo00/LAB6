@@ -29,7 +29,7 @@ def drop_and_restart(session):
     create_customer(session)
     create_region(session)
     create_segment(session)
-    #connect_nodes(session)
+    connect_nodes(session)
 
 
 def create_part(session):
@@ -60,20 +60,67 @@ def create_order(session):
 
 def create_customer(session):
     for i in range(10):
-        session.run("CREATE (n:Customer {custkey:" + str(i) + ", nationkey: " + str(i) + "})")
+        session.run("CREATE (n:Customer {custkey:" + str(i) + ", nationkey: " + str(i) +
+                    ", mktsegment: '" +random.choice(segment)+"'})")
 
 
 def create_region(session):
     for i in range(10):
-        session.run("CREATE (n:region {regionkey:" + str(i) + ", name: '" + random.choice(region) + "'})")
+        session.run("CREATE (n:Region {regionkey:" + str(i) + ", name: '" + random.choice(region) + "'})")
 
 
 def create_segment(session):
-    for i in range(10):
-        session.run("CREATE (n:Segment {mktsegment:'" + random.choice(segment) + "'})")
+    for i in range(len(segment)):
+        session.run("CREATE (n:Segment {mktsegment:'" + segment[i] + "'})")
 
 def connect_nodes(session):
-    session.run()
+    for i in range(10): #ASSOCIEM PART AMB PART_SUPP
+        session.run("MATCH (part"+str(i)+":Part {partkey:"+str(i)+"}), (ps"+str(i)+":Partsupp {partkey:"+str(i)+"})"
+                    "CREATE ((part"+str(i)+") - [:P_PS] -> (ps"+str(i)+"))")
+
+    for i in range(10): #ASSOCIEM SUPPLIER AMB PART_SUPP
+        session.run("MATCH (supp"+str(i)+":Supplier {suppkey:"+str(i)+"}), (ps"+str(i)+":Partsupp {suppkey:"+str(i)+"})"
+                    "CREATE ((supp"+str(i)+") - [:S_PS] -> (ps"+str(i)+"))")
+
+    for i in range(20): #ASSOCIEM ORDER AMB PART_SUPP
+        ps_key = str(random.randint(0, 10))
+        session.run("MATCH (order:Order{orderkey:"+str(i)+"}), (ps:Partsupp{suppkey:"+str(ps_key)+", partkey:"+str(ps_key)+"})"
+                    "CREATE ((order) - "
+                    "[:LINEITEM {returnflag:"+str(random.randint(0,1))+"," \
+                                "linestatus:"+str(random.randint(0,1))+"," \
+                                "quantity:"+str(random.randint(0,20))+"," \
+                                "extendedprice:"+str(random.randint(0,20))+"," \
+                                "discount:" + str(random.randint(0, 20)) + "," \
+                                "tax:" + str(random.randint(0, 20)) + "," \
+                                "shipdate:'" + random.choice(dates) +"',"\
+                                "orderkey:" + str(i) + ","\
+                                "suppkey:ps.suppkey," \
+                                "partkey:ps.suppkey }] -> (ps))")
+
+    for i in range(10): #ASSOCIEM ORDER AMB CUSTOMER
+        c_key = str(random.randint(0, 10))
+        session.run("MATCH (order:Order {orderkey:"+str(i)+"}), (customer:Customer {custkey:"+str(c_key)+"})"
+                    "CREATE ((order) - [:O_C] -> (customer))")
+
+    for i in range(10): #ASSOCIEM CUSTOMER AMB SEGMENT
+        session.run("MATCH (customer:Customer {custkey:"+str(i)+"}), (segment:Segment{mktsegment: customer.mktsegment})"
+                    "CREATE ((customer) - [:O_C] -> (segment))")
+
+    for i in range(10): #ASSOCIEM CUSTOMER AMB REGION
+        regionkey = random.randint(0, 10)
+        session.run("MATCH (customer:Customer {custkey:"+str(i)+"}), (region:Region{regionkey:"+str(regionkey)+"})"
+                    "CREATE ((customer) - [:NATION {"
+                                 "name:'" + random.choice(nation)+ "',"\
+                                "nationkey:customer.nationkey," \
+                                "regionkey:"+str(regionkey)+" }] -> (region))")
+
+    for i in range(10): #ASSOCIEM SUPPLIER AMB REGION
+        regionkey = random.randint(0, 10)
+        session.run("MATCH (supplier:Supplier {suppkey:"+str(i)+"}), (region:Region{regionkey:"+str(regionkey)+"})"
+                    "CREATE ((supplier) - [:SUPP_REGION {"
+                                 "name:'" + random.choice(nation)+ "',"\
+                                "nationkey:supplier.nationkey," \
+                                "regionkey:"+str(regionkey)+" }] -> (region))")
 
 def print_menu():
     print("Que vols fer¿?:\n",
