@@ -29,20 +29,20 @@ def drop_and_restart(session):
     create_customer(session)
     create_region(session)
     create_segment(session)
-    connect_nodes(session)
+    #connect_nodes(session)
 
 
 def create_part(session):
     for i in range(10):
-        session.run("CREATE (n:Part {partkey: " + str(i) + ",mfgr: " + random.choice(mfgr) +
-                    ", size: " + str(random.randint(0, 10)) + ",type: " + random.choice(tipus) + "})")
+        session.run("CREATE (n:Part {partkey: " + str(i) + ",mfgr: '" + random.choice(mfgr) +
+                    "', size: " + str(random.randint(0, 10)) + ",type: '" + random.choice(tipus) + "'})")
 
 
 def create_supp(session):
     for i in range(10):
         session.run("CREATE (n:Supplier {suppkey:" + str(i) + ", acctbal: " + str(random.randint(0, 10)) +
-                    ", name:" + random.choice(nation) + ", address: " + random.choice(address) +
-                    ",phone: '999999999999999', comment: 'Comentari', nationkey: " + str(i) + "})")
+                    ", name:'" + random.choice(nation) + "', address: '" + random.choice(address) +
+                    "',phone: '999999999999999', comment: 'Comentari', nationkey: " + str(i) + "})")
 
 
 def create_partsupp(session):
@@ -54,8 +54,8 @@ def create_partsupp(session):
 def create_order(session):
     for i in range(10):
         session.run("CREATE (n:Order {orderkey:" + str(i) +
-                    ", orderdate: " + random.choice(dates) +
-                    ", shippriority:" + str(random.randint(0, 10)) + ", custkey: " + str(i) + "})")
+                    ", orderdate: '" + random.choice(dates) +
+                    "', shippriority:" + str(random.randint(0, 10)) + ", custkey: " + str(i) + "})")
 
 
 def create_customer(session):
@@ -65,12 +65,12 @@ def create_customer(session):
 
 def create_region(session):
     for i in range(10):
-        session.run("CREATE (n:region {regionkey:" + str(i) + ", name: " + random.choice(region) + "})")
+        session.run("CREATE (n:region {regionkey:" + str(i) + ", name: '" + random.choice(region) + "'})")
 
 
 def create_segment(session):
     for i in range(10):
-        session.run("CREATE (n:Segment {mktsegment:" + random.choice(segment) + "})")
+        session.run("CREATE (n:Segment {mktsegment:'" + random.choice(segment) + "'})")
 
 def connect_nodes(session):
     session.run()
@@ -138,7 +138,8 @@ if __name__ == '__main__':
 
     while op != -1:
         if op == 0:
-            nodes = session.run("MATCH (n)-[r]->(m) RETURN n,r,m")
+            #nodes = session.run("MATCH (n)-[r]->(m) RETURN n,r,m")
+            nodes = session.run("MATCH (n) RETURN n")
             for node in nodes:
                 print(node)
 
