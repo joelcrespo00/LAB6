@@ -29,13 +29,13 @@ def drop_and_restart(session):
     create_customer(session)
     create_region(session)
     create_segment(session)
+    connect_nodes(session)
 
 
 def create_part(session):
     for i in range(10):
-        session.run("CREATE (n:Part {partkey: " + str(i) + ",mfgr: " + random.choice(mfgr) + ", "
-                                                                                             "size: " + str(
-            random.randint(0, 10)) + ",type: " + random.choice(tipus) + "})")
+        session.run("CREATE (n:Part {partkey: " + str(i) + ",mfgr: " + random.choice(mfgr) +
+                    ", size: " + str(random.randint(0, 10)) + ",type: " + random.choice(tipus) + "})")
 
 
 def create_supp(session):
@@ -72,6 +72,8 @@ def create_segment(session):
     for i in range(10):
         session.run("CREATE (n:Segment {mktsegment:" + random.choice(segment) + "})")
 
+def connect_nodes(session):
+    session.run()
 
 def print_menu():
     print("Que vols fer¿?:\n",
@@ -89,6 +91,38 @@ def valid_date(date):
     except ValueError:
         return False
     return True
+
+
+def q1(session, date):
+    q1 = session.run()
+
+    print("Q1 results:")
+    for row in q1:
+        print(row)
+
+
+def q2(session, size, type, region):
+    q2 = session.run()
+
+    print("Q1 results:")
+    for row in q2:
+        print(row)
+
+
+def q3(session, mktsegment, date1, date2):
+    q3 = session.run()
+
+    print("Q3 results:")
+    for row in q3:
+        print(row)
+
+
+def q4(session, region, date):
+    q4 = session.run()
+
+    print("Q4 results:")
+    for row in q4:
+        print(row)
 
 
 if __name__ == '__main__':
@@ -113,13 +147,15 @@ if __name__ == '__main__':
             date = input("Introdueix data amb format següent: YYYY-mm-dd ")
             while not valid_date(date):
                 date = input("Format incorrecte. Introdueix data amb format següent: YYYY-mm-dd ")
-            #q1(db["order"], dt.datetime.strptime(date, "%Y-%m-%d"))
+
+            q1(session, dt.datetime.strptime(date, "%Y-%m-%d"))
 
         elif op == 2:  # region, type, size
             size = input("Introdueix un valor numeric per l'atribut 'size': ")
             type = input("Introdueix un valor per l'atribut 'type' ")
             region = input("Introdueix un valor per l'atribut 'region' ")
-            #q2(db["partsupp"], float(size), str(type), str(region))
+
+            q2(session, float(size), str(type), str(region))
 
         elif op == 3:
             mkt_segment = input("Introdueix un valor per l'atribut 'mkt_segment'")
@@ -129,18 +165,19 @@ if __name__ == '__main__':
             date2 = input("Introdueix data amb format següent: YYYY-mm-dd ")
             while not valid_date(date2):
                 date2 = input("Format incorrecte. Introdueix data amb format següent: YYYY-mm-dd ")
-            #q3(db["order"], str(mkt_segment), dt.datetime.strptime(date1, "%Y-%m-%d"),dt.datetime.strptime(date2, "%Y-%m-%d"))
+
+            q3(session, str(mkt_segment), dt.datetime.strptime(date1, "%Y-%m-%d"),dt.datetime.strptime(date2, "%Y-%m-%d"))
 
         elif op == 4:
             region = input("Introdueix un valor per l'atribut 'region'")
             date = input("Introdueix data amb format següent: YYYY-mm-dd ")
             while not valid_date(date):
                 date = input("Format incorrecte. Introdueix data amb format següent: YYYY-mm-dd ")
-            #q4(db["order"], str(region), dt.datetime.strptime(date, "%Y-%m-%d"))
+
+            q4(session, str(region), dt.datetime.strptime(date, "%Y-%m-%d"))
 
         print_menu()
         op = input("Desitja fer alguna accio mes?")
         op = int(op)
 
-##### REQUIREMENTS
-# neo4j
+
