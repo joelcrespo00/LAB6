@@ -109,7 +109,7 @@ def connect_nodes(session):
     for i in range(10): #ASSOCIEM CUSTOMER AMB REGION
         regionkey = random.randint(0, 10)
         session.run("MATCH (customer:Customer {custkey:"+str(i)+"}), (region:Region{regionkey:"+str(regionkey)+"})"
-                    "CREATE ((customer) - [:NATION {"
+                    "CREATE ((customer) - [:C_NATION {"
                                  "name:'" + random.choice(nation)+ "',"\
                                 "nationkey:customer.nationkey," \
                                 "regionkey:"+str(regionkey)+" }] -> (region))")
@@ -117,41 +117,37 @@ def connect_nodes(session):
     for i in range(10): #ASSOCIEM SUPPLIER AMB REGION
         regionkey = random.randint(0, 10)
         session.run("MATCH (supplier:Supplier {suppkey:"+str(i)+"}), (region:Region{regionkey:"+str(regionkey)+"})"
-                    "CREATE ((supplier) - [:SUPP_REGION {"
+                    "CREATE ((supplier) - [:S_NATION {"
                                  "name:'" + random.choice(nation)+ "',"\
                                 "nationkey:supplier.nationkey," \
                                 "regionkey:"+str(regionkey)+" }] -> (region))")
 
-def print_menu():
-    print("Que vols fer¿?:\n",
-          "0 --> Data\n",
-          "1 --> Q1\n",
-          "2 --> Q2\n",
-          "3 --> Q3\n",
-          "4 --> Q4\n")
-
-
-def valid_date(date):
-    year, month, day = date.split('-')
-    try:
-        dt.datetime(int(year), int(month), int(day))
-    except ValueError:
-        return False
-    return True
-
-
 def q1(session, date):
-    q1 = session.run()
+    q1 = session.run("MATCH (:Order)-[l:LINEITEM]-(:Partsupp) "
+                     "WHERE l.shipdate <= $date "
+                     "RETURN l.returnflag, l.linestatus, sum(l.quantity) AS sum_qty,"
+                    "sum(l.extendedprice) AS sum_base_price,"
+                    "sum(l.extendedprice*(1-l.discount)) as sum_disc_price,"
+                    "sum(l.extendedprice*(1-l.discount)*(1+l.tax)) as sum_charge, avg(l.quantity) as avg_qty,"
+                    "avg(l.extendedprice) as avg_price, avg(l.discount) as avg_disc, count(*) as count_order "
+                     "ORDER BY l.returnflag, l.linestatus",
+                     {"date": date})
+
+
+# ////
 
     print("Q1 results:")
     for row in q1:
         print(row)
 
 
+
+
+
 def q2(session, size, type, region):
     q2 = session.run()
 
-    print("Q1 results:")
+    print("Q2 results:")
     for row in q2:
         print(row)
 
@@ -171,6 +167,21 @@ def q4(session, region, date):
     for row in q4:
         print(row)
 
+def print_menu():
+    print("Que vols fer¿?:\n",
+          "1 --> Q1\n",
+          "2 --> Q2\n",
+          "3 --> Q3\n",
+          "4 --> Q4\n")
+
+
+def valid_date(date):
+    year, month, day = date.split('-')
+    try:
+        dt.datetime(int(year), int(month), int(day))
+    except ValueError:
+        return False
+    return True
 
 if __name__ == '__main__':
 
@@ -184,19 +195,14 @@ if __name__ == '__main__':
     op = int(input("Quina acció desitja realitzar?"))
 
     while op != -1:
-        if op == 0:
-            #nodes = session.run("MATCH (n)-[r]->(m) RETURN n,r,m")
-            nodes = session.run("MATCH (n) RETURN n")
-            for node in nodes:
-                print(node)
 
-        elif op == 1:
+        if op == 1:
             # Entrar la data a comparar
             date = input("Introdueix data amb format següent: YYYY-mm-dd ")
             while not valid_date(date):
                 date = input("Format incorrecte. Introdueix data amb format següent: YYYY-mm-dd ")
 
-            q1(session, dt.datetime.strptime(date, "%Y-%m-%d"))
+            q1(session, dt.datetime.strptime(date, "%Y-%m-%d").__str__())
 
         elif op == 2:  # region, type, size
             size = input("Introdueix un valor numeric per l'atribut 'size': ")
