@@ -35,7 +35,7 @@ def drop_and_restart(session):
 def create_part(session):
     for i in range(10):
         session.run("CREATE (n:Part {partkey: " + str(i) + ",mfgr: '" + random.choice(mfgr) +
-                    "', size: " + str(random.randint(0, 10)/6) + ",type: '" + random.choice(tipus) + "'})")
+                    "', size: " + str(float(random.randint(0, 10)/5)) + ",type: '" + random.choice(tipus) + "'})")
 
 
 def create_supp(session):
@@ -48,7 +48,7 @@ def create_supp(session):
 def create_partsupp(session):
     for i in range(10):
         session.run("CREATE (n:Partsupp {partkey:" + str(i) +
-                    ", supplycost: " + str(random.randint(0, 10)) + ", suppkey: " + str(i) + "})")
+                    ", supplycost: " + str(random.randint(1, 10)) + ", suppkey: " + str(i) + "})")
 
 
 def create_order(session):
@@ -139,11 +139,36 @@ def q1(session, date):
 
 
 def q2(session, size, type, region):
-    q2 = session.run()
+
+    c_min = 1.0
+    q2_sub = q2_subquery(region)
+
+    for row in q2_sub:
+        c_min = float(row["minim"])
+
+    q2 = session.run("MATCH (p:Part{size:$size})--(ps:Partsupp)--(s:Supplier)-[n:S_NATION]-(r:Region{name:$region})  "
+                     "WHERE p.type =~ $type AND ps.supplycost = $c_min "
+                     "RETURN s.acctbal,"
+                     " s.name, n.name, "
+                     "p.partkey, p.mfgr, "
+                     "s.address, s.phone, s.comment "
+                     "ORDER BY s.acctbal desc, n.name, s.name, p.partkey",
+                     {"size": size,
+                      "type":type,
+                      "region":region,
+                      "c_min":c_min})
 
     print("Q2 results:")
     for row in q2:
         print(row)
+
+
+def q2_subquery(region):
+    q2_sub = session.run("MATCH (ps:Partsupp)--(s:Supplier)-[n:S_NATION]-(r:Region{name:$region})  "
+                     "RETURN min(ps.supplycost) AS minim",
+                     {"region":region})
+
+    return q2_sub
 
 
 def q3(session, mktsegment, date1, date2):
@@ -161,7 +186,6 @@ def q3(session, mktsegment, date1, date2):
     print("Q3 results:")
     for row in q3:
         print(row)
-
 
 
 def q4(session, region, date):
