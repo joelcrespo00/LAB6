@@ -35,7 +35,7 @@ def drop_and_restart(session):
 def create_part(session):
     for i in range(10):
         session.run("CREATE (n:Part {partkey: " + str(i) + ",mfgr: '" + random.choice(mfgr) +
-                    "', size: " + str(random.randint(0, 10)) + ",type: '" + random.choice(tipus) + "'})")
+                    "', size: " + str(random.randint(0, 10)/6) + ",type: '" + random.choice(tipus) + "'})")
 
 
 def create_supp(session):
@@ -133,15 +133,9 @@ def q1(session, date):
                      "ORDER BY l.returnflag, l.linestatus",
                      {"date": date})
 
-
-# ////
-
     print("Q1 results:")
     for row in q1:
         print(row)
-
-
-
 
 
 def q2(session, size, type, region):
@@ -153,11 +147,21 @@ def q2(session, size, type, region):
 
 
 def q3(session, mktsegment, date1, date2):
-    q3 = session.run()
+    q3 = session.run("MATCH (s:Segment{mktsegment:$mktsegment})--(c:Customer)--(o:Order)-[l:LINEITEM]-(:Partsupp) "
+                     "WHERE o.orderdate < $date1 AND l.shipdate > $date2 "
+                     "RETURN l.orderkey, "
+                     "sum(l.extendedprice*(1-l.discount)) as revenue, "
+                     "o.orderdate, "
+                     "o.shippriority "
+                     "ORDER BY revenue desc, o.orderdate",
+                     {"mktsegment": mktsegment,
+                      "date1":date1,
+                      "date2":date2})
 
     print("Q3 results:")
     for row in q3:
         print(row)
+
 
 
 def q4(session, region, date):
@@ -213,14 +217,14 @@ if __name__ == '__main__':
 
         elif op == 3:
             mkt_segment = input("Introdueix un valor per l'atribut 'mkt_segment'")
-            date1 = input("Introdueix data amb format següent: YYYY-mm-dd ")
+            date1 = input("Introdueix data1 amb format següent: YYYY-mm-dd ")
             while not valid_date(date1):
-                date1 = input("Format incorrecte. Introdueix data amb format següent: YYYY-mm-dd ")
-            date2 = input("Introdueix data amb format següent: YYYY-mm-dd ")
+                date1 = input("Format incorrecte. Introdueix data1 amb format següent: YYYY-mm-dd ")
+            date2 = input("Introdueix data2 amb format següent: YYYY-mm-dd ")
             while not valid_date(date2):
-                date2 = input("Format incorrecte. Introdueix data amb format següent: YYYY-mm-dd ")
+                date2 = input("Format incorrecte. Introdueix data2 amb format següent: YYYY-mm-dd ")
 
-            q3(session, str(mkt_segment), dt.datetime.strptime(date1, "%Y-%m-%d"),dt.datetime.strptime(date2, "%Y-%m-%d"))
+            q3(session, str(mkt_segment), dt.datetime.strptime(date1, "%Y-%m-%d").__str__(),dt.datetime.strptime(date2, "%Y-%m-%d").__str__())
 
         elif op == 4:
             region = input("Introdueix un valor per l'atribut 'region'")
