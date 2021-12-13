@@ -165,11 +165,23 @@ def q3(session, mktsegment, date1, date2):
 
 
 def q4(session, region, date):
-    q4 = session.run()
+    date_year2 = date.year + 1
+    date2 = date.replace(date_year2)
+
+    q4 = session.run("MATCH (:Customer)--(o:Order)-[l:LINEITEM]-(:Partsupp)--(s:Supplier)-[n:S_NATION]-(r:Region{name:$region}) "
+                     "WHERE o.orderdate >= $date "
+                     "AND o.orderdate < $date2 "
+                     "RETURN n.name, "
+                     "sum(l.extendedprice*(1-l.discount)) as revenue "
+                     "ORDER BY revenue desc ",
+                     {"region": region,
+                      "date":date.__str__(),
+                      "date2":date2.__str__()})
 
     print("Q4 results:")
     for row in q4:
         print(row)
+
 
 def print_menu():
     print("Que vols fer¿?:\n",
