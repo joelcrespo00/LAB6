@@ -140,35 +140,23 @@ def q1(session, date):
 
 def q2(session, size, type, region):
 
-    c_min = 1.0
-    q2_sub = q2_subquery(region)
-
-    for row in q2_sub:
-        c_min = float(row["minim"])
-
-    q2 = session.run("MATCH (p:Part{size:$size})--(ps:Partsupp)--(s:Supplier)-[n:S_NATION]-(r:Region{name:$region})  "
-                     "WHERE p.type =~ $type AND ps.supplycost = $c_min "
+    q2 = session.run("MATCH (ps:Partsupp)--(s:Supplier)-[n:S_NATION]-(r:Region{name:$region})  "
+                     "WITH min(ps.supplycost) AS minim "
+                     
+                    "MATCH (p:Part{size:$size})--(ps:Partsupp{supplycost:minim})--(s:Supplier)-[n:S_NATION]-(r:Region{name:$region})  "
+                     "WHERE p.type =~ $type "
                      "RETURN s.acctbal,"
                      " s.name, n.name, "
                      "p.partkey, p.mfgr, "
                      "s.address, s.phone, s.comment "
                      "ORDER BY s.acctbal desc, n.name, s.name, p.partkey",
                      {"size": size,
-                      "type":type,
-                      "region":region,
-                      "c_min":c_min})
+                      "type": type,
+                      "region": region})
 
     print("Q2 results:")
     for row in q2:
         print(row)
-
-
-def q2_subquery(region):
-    q2_sub = session.run("MATCH (ps:Partsupp)--(s:Supplier)-[n:S_NATION]-(r:Region{name:$region})  "
-                     "RETURN min(ps.supplycost) AS minim",
-                     {"region":region})
-
-    return q2_sub
 
 
 def q3(session, mktsegment, date1, date2):
