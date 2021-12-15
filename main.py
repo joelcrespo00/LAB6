@@ -50,6 +50,7 @@ def create_partsupp(session):
         session.run("CREATE (n:Partsupp {partkey:" + str(i) +
                     ", supplycost: " + str(random.randint(1, 10)) + ", suppkey: " + str(i) + "})")
 
+    session.run("CREATE INDEX index_suppcost IF NOT EXISTS FOR (n:Partsupp) ON(n.supplycost)")
 
 def create_order(session):
     for i in range(10):
@@ -67,10 +68,8 @@ def create_customer(session):
 
 
 def create_region(session):
-    for i in range(10):
-        session.run("CREATE (n:Region {regionkey:" + str(i) + ", name: '" + random.choice(region) + "'})")
-
-    session.run("CREATE INDEX index_rname IF NOT EXISTS FOR (n:Region) ON(n.name)")
+    for i in range(5):
+        session.run("CREATE (n:Region {regionkey:" + str(i) + ", name: '" + region[i] + "'})")
 
 
 def create_segment(session):
