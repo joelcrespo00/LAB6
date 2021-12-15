@@ -20,7 +20,7 @@ segment = ["Seg1", "Seg2", "Seg3"]
 
 
 def drop_and_restart(session):
-    session.run("MATCH(n) DETACH DELETE n")
+    session.run("MATCH(n) DETACH DELETE n ")
 
     create_part(session)
     create_supp(session)
@@ -57,6 +57,8 @@ def create_order(session):
                     ", orderdate: '" + random.choice(dates) +
                     "', shippriority:" + str(random.randint(0, 10)) + ", custkey: " + str(i) + "})")
 
+    session.run("CREATE INDEX index_orderdate IF NOT EXISTS FOR (n:Order) ON(n.orderdate)")
+
 
 def create_customer(session):
     for i in range(10):
@@ -67,6 +69,8 @@ def create_customer(session):
 def create_region(session):
     for i in range(10):
         session.run("CREATE (n:Region {regionkey:" + str(i) + ", name: '" + random.choice(region) + "'})")
+
+    session.run("CREATE INDEX index_rname IF NOT EXISTS FOR (n:Region) ON(n.name)")
 
 
 def create_segment(session):
@@ -96,6 +100,8 @@ def connect_nodes(session):
                                 "orderkey:" + str(i) + ","\
                                 "suppkey:ps.suppkey," \
                                 "partkey:ps.suppkey }] -> (ps))")
+
+    session.run("CREATE INDEX index_shipdate IF NOT EXISTS FOR ()-[l:LINEITEM]-() ON(l.shipdate)")
 
     for i in range(10): #ASSOCIEM ORDER AMB CUSTOMER
         c_key = str(random.randint(0, 10))
@@ -181,8 +187,7 @@ def q4(session, region, date):
     date2 = date.replace(date_year2)
 
     q4 = session.run("MATCH (:Customer)--(o:Order)-[l:LINEITEM]-(:Partsupp)--(s:Supplier)-[n:S_NATION]-(r:Region{name:$region}) "
-                     "WHERE o.orderdate >= $date "
-                     "AND o.orderdate < $date2 "
+                     "WHERE o.orderdate>=$date AND o.orderdate < $date2 "
                      "RETURN n.name, "
                      "sum(l.extendedprice*(1-l.discount)) as revenue "
                      "ORDER BY revenue desc ",
@@ -210,6 +215,7 @@ def valid_date(date):
     except ValueError:
         return False
     return True
+
 
 if __name__ == '__main__':
 
@@ -261,5 +267,4 @@ if __name__ == '__main__':
         print_menu()
         op = input("Desitja fer alguna accio mes?")
         op = int(op)
-
 
